@@ -1,8 +1,6 @@
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import "dotenv/config";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { PrismaClient } from "@prisma/client";
-
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
-const prisma = new PrismaClient({ adapter });
 
 const skills = [
   "Solana",
@@ -43,6 +41,15 @@ const skills = [
 ];
 
 async function main() {
+  console.log("Connecting to:", process.env.TURSO_DATABASE_URL);
+
+  const adapter = new PrismaLibSql({
+    url: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
+
+  const prisma = new PrismaClient({ adapter });
+
   console.log("Seeding skills...");
 
   for (const skillName of skills) {
@@ -54,13 +61,11 @@ async function main() {
   }
 
   console.log(`Seeded ${skills.length} skills.`);
+
+  await prisma.$disconnect();
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

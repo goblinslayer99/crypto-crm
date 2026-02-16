@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Contact {
+  id             String   @id @default(uuid())
+  name           String
+  telegram       String?
+  twitter        String?
+  discord        String?
+  github         String?
+  linkedin       String?
+  email          String?
+  company        String?
+  role           String?
+  currentProject String?
+  howWeMet       String?
+  dateMet        DateTime
+  lastContacted  DateTime?
+  followUpDate   DateTime?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  skills ContactSkill[]
+}
+
+model Skill {
+  id       String         @id @default(uuid())
+  name     String         @unique
+  contacts ContactSkill[]
+}
+
+model ContactSkill {
+  contactId String
+  skillId   String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([contactId, skillId])
+}

@@ -48,38 +48,46 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { skills: skillNames, ...contactData } = body;
+  try {
+    const body = await request.json();
+    const { skills: skillNames, ...contactData } = body;
 
-  const contact = await prisma.contact.create({
-    data: {
-      ...contactData,
-      dateMet: new Date(contactData.dateMet),
-      lastContacted: contactData.lastContacted
-        ? new Date(contactData.lastContacted)
-        : null,
-      followUpDate: contactData.followUpDate
-        ? new Date(contactData.followUpDate)
-        : null,
-      skills: {
-        create: skillNames?.map((skillName: string) => ({
-          skill: {
-            connectOrCreate: {
-              where: { name: skillName },
-              create: { name: skillName },
+    const contact = await prisma.contact.create({
+      data: {
+        ...contactData,
+        dateMet: new Date(contactData.dateMet),
+        lastContacted: contactData.lastContacted
+          ? new Date(contactData.lastContacted)
+          : null,
+        followUpDate: contactData.followUpDate
+          ? new Date(contactData.followUpDate)
+          : null,
+        skills: {
+          create: skillNames?.map((skillName: string) => ({
+            skill: {
+              connectOrCreate: {
+                where: { name: skillName },
+                create: { name: skillName },
+              },
             },
-          },
-        })) || [],
-      },
-    },
-    include: {
-      skills: {
-        include: {
-          skill: true,
+          })) || [],
         },
       },
-    },
-  });
+      include: {
+        skills: {
+          include: {
+            skill: true,
+          },
+        },
+      },
+    });
 
-  return NextResponse.json(contact, { status: 201 });
+    return NextResponse.json(contact, { status: 201 });
+  } catch (error) {
+    console.error("Failed to create contact:", error);
+    return NextResponse.json(
+      { error: String(error) },
+      { status: 500 }
+    );
+  }
 }
